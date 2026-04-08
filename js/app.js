@@ -1,5 +1,12 @@
 // ─── APP STATE & UI ───
 let currentFilter = 'all';
+let PRODUCTS = [];
+
+async function loadProducts() {
+  const res = await fetch(window.location.origin + '/api/products');
+  PRODUCTS = await res.json();
+  renderProducts(currentFilter);
+}
 
 function renderProducts(filter = 'all') {
   const grid = document.getElementById('productGrid');
@@ -50,4 +57,4 @@ function submitContact() {
 }
 
 // ─── INIT ───
-renderProducts();
+loadProducts();

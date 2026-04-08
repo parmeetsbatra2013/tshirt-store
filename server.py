@@ -10,6 +10,17 @@ def init_db():
     con = sqlite3.connect(DB_PATH)
     con.execute('PRAGMA journal_mode=WAL')
     con.execute('''
+        CREATE TABLE IF NOT EXISTS products (
+            id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            name     TEXT    NOT NULL,
+            emoji    TEXT    NOT NULL,
+            price    REAL    NOT NULL,
+            category TEXT    NOT NULL,
+            badge    TEXT,
+            stock    INTEGER NOT NULL DEFAULT 100
+        )
+    ''')
+    con.execute('''
         CREATE TABLE IF NOT EXISTS cart (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT    NOT NULL,
@@ -45,28 +56,74 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── routing ──
     def do_GET(self):
-        if urlparse(self.path).path == '/api/cart':
-            self._get_cart()
-        else:
-            self._static()
+        p = urlparse(self.path).path
+        if   p == '/api/cart':     self._get_cart()
+        elif p == '/api/products': self._get_products()
+        else:                      self._static()
 
     def do_POST(self):
         p = urlparse(self.path).path
-        if   p == '/api/cart/add':    self._add()
-        elif p == '/api/cart/update': self._update()
-        elif p == '/api/cart/clear':  self._clear()
+        if   p == '/api/cart/add':      self._add()
+        elif p == '/api/cart/update':   self._update()
+        elif p == '/api/cart/clear':    self._clear()
+        elif p == '/api/products':      self._create_product()
+        elif p.startswith('/api/products/'): self._update_product(p)
         else: self._not_found()
 
     def do_DELETE(self):
-        if urlparse(self.path).path == '/api/cart/remove':
-            self._remove()
-        else:
-            self._not_found()
+        p = urlparse(self.path).path
+        if   p == '/api/cart/remove':        self._remove()
+        elif p.startswith('/api/products/'): self._delete_product(p)
+        else:                                self._not_found()
 
     def do_OPTIONS(self):           # CORS pre-flight
         self.send_response(204)
         self._cors()
         self.end_headers()
+
+    # ── products API ──
+    def _get_products(self):
+        con = db()
+        rows = con.execute(
+            'SELECT id, name, emoji, price, category, badge, stock FROM products ORDER BY id'
+        ).fetchall()
+        con.close()
+        self._json([{'id': r[0], 'name': r[1], 'emoji': r[2], 'price': r[3],
+                     'category': r[4], 'badge': r[5], 'stock': r[6]} for r in rows])
+
+    def _create_product(self):
+        data = self._body()
+        con = db()
+        cur = con.execute(
+            'INSERT INTO products (name, emoji, price, category, badge, stock) VALUES (?,?,?,?,?,?)',
+            (data['name'], data['emoji'], float(data['price']),
+             data['category'], data.get('badge') or None, int(data.get('stock', 100)))
+        )
+        con.commit()
+        pid = cur.lastrowid
+        con.close()
+        self._json({'ok': True, 'id': pid})
+
+    def _update_product(self, path):
+        pid = path.split('/')[-1]
+        data = self._body()
+        con = db()
+        con.execute(
+            'UPDATE products SET name=?, emoji=?, price=?, category=?, badge=?, stock=? WHERE id=?',
+            (data['name'], data['emoji'], float(data['price']),
+             data['category'], data.get('badge') or None, int(data.get('stock', 100)), pid)
+        )
+        con.commit()
+        con.close()
+        self._json({'ok': True})
+
+    def _delete_product(self, path):
+        pid = path.split('/')[-1]
+        con = db()
+        con.execute('DELETE FROM products WHERE id = ?', (pid,))
+        con.commit()
+        con.close()
+        self._json({'ok': True})
 
     # ── cart API ──
     def _get_cart(self):

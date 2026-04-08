@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batra Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; }
+
+    header {
+      background: #111; color: #fff; padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 1.2rem; }
+    header a { color: #aaa; font-size: 0.85rem; text-decoration: none; }
+    header a:hover { color: #fff; }
+
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
+
+    .card {
+      background: #fff; border-radius: 10px; padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 32px;
+    }
+    .card h2 { font-size: 1rem; margin-bottom: 16px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .form-grid input, .form-grid select {
+      padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 0.95rem; width: 100%;
+    }
+    .form-grid input:focus, .form-grid select:focus { outline: none; border-color: #111; }
+
+    .btn {
+      padding: 9px 20px; border: none; border-radius: 6px;
+      font-size: 0.9rem; cursor: pointer; font-weight: 600;
+    }
+    .btn-primary { background: #111; color: #fff; }
+    .btn-primary:hover { background: #333; }
+    .btn-danger { background: #e53e3e; color: #fff; }
+    .btn-danger:hover { background: #c53030; }
+    .btn-secondary { background: #eee; color: #333; }
+    .btn-secondary:hover { background: #ddd; }
+
+    .form-actions { margin-top: 12px; display: flex; gap: 8px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #eee; color: #777; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+    td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; background: #fed7aa; color: #9a3412; }
+    .emoji-cell { font-size: 1.4rem; }
+    .actions { display: flex; gap: 6px; }
+    .stock-low { color: #e53e3e; font-weight: 600; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: #111; color: #fff;
+      padding: 12px 20px; border-radius: 8px; font-size: 0.9rem;
+      opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Batra Admin — Products</h1>
+  <a href="/">← Back to Store</a>
+</header>
+
+<div class="container">
+
+  <!-- Add / Edit Form -->
+  <div class="card">
+    <h2 id="formTitle">Add New Product</h2>
+    <input type="hidden" id="editId">
+    <div class="form-grid">
+      <input type="text"   id="fName"     placeholder="Name"  required>
+      <input type="text"   id="fEmoji"    placeholder="Emoji (e.g. 👕)">
+      <input type="number" id="fPrice"    placeholder="Price" step="0.01" min="0">
+      <select id="fCategory">
+        <option value="plain">Plain</option>
+        <option value="graphic">Graphic</option>
+        <option value="vintage">Vintage</option>
+        <option value="limited">Limited</option>
+      </select>
+      <input type="text"   id="fBadge"    placeholder="Badge (e.g. NEW, HOT)">
+      <input type="number" id="fStock"    placeholder="Stock" min="0" value="100">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      <button class="btn btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Product Table -->
+  <div class="card">
+    <h2>All Products</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th></th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Badge</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = window.location.origin;
+  let products = [];
+
+  async function loadProducts() {
+    const res = await fetch(API + '/api/products');
+    products = await res.json();
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('productTable');
+    if (products.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px">No products yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = products.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td class="emoji-cell">${p.emoji}</td>
+        <td>${p.name}</td>
+        <td>${p.category}</td>
+        <td>$${p.price.toFixed(2)}</td>
+        <td>${p.badge ? '<span class="badge">' + p.badge + '</span>' : '—'}</td>
+        <td class="${p.stock < 10 ? 'stock-low' : ''}">${p.stock}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-secondary" onclick="editProduct(${p.id})">Edit</button>
+            <button class="btn btn-danger"    onclick="deleteProduct(${p.id})">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function saveProduct() {
+    const id    = document.getElementById('editId').value;
+    const data  = {
+      name:     document.getElementById('fName').value.trim(),
+      emoji:    document.getElementById('fEmoji').value.trim(),
+      price:    parseFloat(document.getElementById('fPrice').value),
+      category: document.getElementById('fCategory').value,
+      badge:    document.getElementById('fBadge').value.trim() || null,
+      stock:    parseInt(document.getElementById('fStock').value) || 100,
+    };
+    if (!data.name || !data.emoji || isNaN(data.price)) {
+      showToast('Name, emoji and price are required.');
+      return;
+    }
+    const url    = id ? API + '/api/products/' + id : API + '/api/products';
+    const method = id ? 'POST' : 'POST';
+    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    cancelEdit();
+    await loadProducts();
+    showToast(id ? 'Product updated!' : 'Product added!');
+  }
+
+  function editProduct(id) {
+    const p = products.find(p => p.id === id);
+    if (!p) return;
+    document.getElementById('editId').value       = p.id;
+    document.getElementById('fName').value         = p.name;
+    document.getElementById('fEmoji').value        = p.emoji;
+    document.getElementById('fPrice').value        = p.price;
+    document.getElementById('fCategory').value     = p.category;
+    document.getElementById('fBadge').value        = p.badge || '';
+    document.getElementById('fStock').value        = p.stock;
+    document.getElementById('formTitle').textContent = 'Edit Product';
+    document.getElementById('cancelBtn').style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function deleteProduct(id) {
+    const p = products.find(p => p.id === id);
+    if (!confirm('Delete "' + p.name + '"?')) return;
+    await fetch(API + '/api/products/' + id, { method: 'DELETE' });
+    await loadProducts();
+    showToast('Product deleted.');
+  }
+
+  function cancelEdit() {
+    document.getElementById('editId').value        = '';
+    document.getElementById('fName').value          = '';
+    document.getElementById('fEmoji').value         = '';
+    document.getElementById('fPrice').value         = '';
+    document.getElementById('fCategory').value      = 'plain';
+    document.getElementById('fBadge').value         = '';
+    document.getElementById('fStock').value         = '100';
+    document.getElementById('formTitle').textContent = 'Add New Product';
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>
