@@ -1,13 +1,18 @@
-// ─── CHECKOUT FUNCTIONS ───
+// ─── CHECKOUT FUNCTIONS ───────────────────────────────────────────────────
 function openCheckout() {
   closeCart();
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const shipping = subtotal >= 50 ? 0 : 5.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const shipping  = subtotal >= 50 ? 0 : 5.99;
+  const tax       = subtotal * 0.08;
+  const total     = subtotal + shipping + tax;
+
   document.getElementById('orderSummary').innerHTML = `
     <h3>Order Summary</h3>
-    ${cart.map(i => `<div class="summary-line"><span>${i.emoji} ${i.name} × ${i.qty}</span><span>$${(i.price * i.qty).toFixed(2)}</span></div>`).join('')}
+    ${cart.map(i => `
+      <div class="summary-line">
+        <span>${i.emoji} ${i.name} × ${i.qty}</span>
+        <span>$${(i.price * i.qty).toFixed(2)}</span>
+      </div>`).join('')}
     <div class="summary-line"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
     <div class="summary-line"><span>Shipping</span><span>${shipping === 0 ? '🎉 Free' : `$${shipping.toFixed(2)}`}</span></div>
     <div class="summary-line"><span>Tax (8%)</span><span>$${tax.toFixed(2)}</span></div>
@@ -20,7 +25,7 @@ function closeCheckout() {
   document.getElementById('checkoutModal').classList.remove('open');
 }
 
-function placeOrder() {
+async function placeOrder() {
   const fields = ['firstName', 'lastName', 'email', 'address', 'city', 'zip', 'cardNum', 'expiry', 'cvv'];
   for (const f of fields) {
     if (!document.getElementById(f).value.trim()) {
@@ -29,6 +34,10 @@ function placeOrder() {
       return;
     }
   }
+  // Clear cart in SQLite
+  await fetch(API + '/api/cart/clear', { method: 'POST' });
+  cart = [];
+
   document.getElementById('modalContent').innerHTML = `
     <div class="success-screen">
       <div class="success-icon">🎉</div>
@@ -41,12 +50,11 @@ function placeOrder() {
 }
 
 function finishOrder() {
-  cart = [];
   updateCartUI();
   closeCheckout();
 }
 
-// ─── INPUT FORMATTERS ───
+// ─── INPUT FORMATTERS ─────────────────────────────────────────────────────
 function formatCard(el) {
   let v = el.value.replace(/\D/g, '').substring(0, 16);
   el.value = v.replace(/(.{4})/g, '$1 ').trim();

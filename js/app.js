@@ -4,11 +4,16 @@ let currentFilter = 'all';
 function renderProducts(filter = 'all') {
   const grid = document.getElementById('productGrid');
   const filtered = filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter);
+  const countEl = document.getElementById('productCount');
+  if (countEl) countEl.textContent = filtered.length + ' items';
   grid.innerHTML = filtered.map(p => `
     <div class="card" data-id="${p.id}">
-      <div class="card-img">${p.emoji}</div>
+      <div class="card-img">
+        ${p.emoji}
+        ${p.badge ? `<span class="badge">${p.badge}</span>` : ''}
+      </div>
       <div class="card-body">
-        <h3>${p.name}${p.badge ? `<span class="badge">${p.badge}</span>` : ''}</h3>
+        <h3>${p.name}</h3>
         <p class="category">${p.category.charAt(0).toUpperCase() + p.category.slice(1)}</p>
       </div>
       <div class="card-footer">
@@ -46,4 +51,3 @@ function submitContact() {
 
 // ─── INIT ───
 renderProducts();
-updateCartUI();

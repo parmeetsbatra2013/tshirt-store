@@ -12,29 +12,37 @@
 
 <!-- HEADER -->
 <header>
-  <div class="logo">Batra</div>
+  <div class="logo">Batra<span>.</span></div>
   <nav>
     <a onclick="document.querySelector('.products-section').scrollIntoView({behavior:'smooth'})">Shop</a>
     <a onclick="document.querySelector('.about-section').scrollIntoView({behavior:'smooth'})">About</a>
     <a onclick="document.querySelector('.contact-section').scrollIntoView({behavior:'smooth'})">Contact</a>
   </nav>
   <button class="cart-btn" onclick="openCart()">
-    🛒 Cart <span class="cart-count" id="cartCount">0</span>
+    Cart <span class="cart-count" id="cartCount">0</span>
   </button>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <h1>Wear What You <em>Love</em></h1>
-  <p>Premium quality tees, delivered to your door. Free shipping on orders over $50.</p>
-  <button class="hero-cta" onclick="document.querySelector('.products-section').scrollIntoView({behavior:'smooth'})">
-    Shop Now ↓
-  </button>
+  <div class="hero-content">
+    <div class="hero-eyebrow">New Collection 2026</div>
+    <h1>Wear What<br>You <em>Love</em></h1>
+    <p>Premium quality tees, crafted with care and delivered to your door. Free shipping on orders over $50.</p>
+    <button class="hero-cta" onclick="document.querySelector('.products-section').scrollIntoView({behavior:'smooth'})">
+      Shop Now &darr;
+    </button>
+    <div class="hero-badges">
+      <div class="hero-badge"><span>&#10003;</span> Free returns</div>
+      <div class="hero-badge"><span>&#10003;</span> 100% organic cotton</div>
+      <div class="hero-badge"><span>&#10003;</span> Ships in 24h</div>
+    </div>
+  </div>
 </section>
 
 <!-- FILTERS -->
 <div class="filters">
-  <span>Filter:</span>
+  <span class="filters-label">Filter</span>
   <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
   <button class="filter-btn" onclick="filterProducts('graphic', this)">Graphic</button>
   <button class="filter-btn" onclick="filterProducts('plain', this)">Plain</button>
@@ -44,7 +52,10 @@
 
 <!-- PRODUCTS -->
 <section class="products-section">
-  <h2 class="section-title">Our Collection</h2>
+  <div class="section-header">
+    <h2 class="section-title">Our Collection</h2>
+    <span class="section-count" id="productCount"></span>
+  </div>
   <div class="grid" id="productGrid"></div>
 </section>
 
@@ -52,16 +63,16 @@
 <div class="overlay" id="overlay" onclick="closeCart()"></div>
 <div class="cart-panel" id="cartPanel">
   <div class="cart-header">
-    🛒 Your Cart
-    <button class="close-btn" onclick="closeCart()">✕</button>
+    <div class="cart-header-title">Your Cart</div>
+    <button class="close-btn" onclick="closeCart()">&#10005;</button>
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-footer" id="cartFooter" style="display:none">
     <div class="cart-total">
-      <span>Total</span>
-      <span id="cartTotal">$0.00</span>
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-amount" id="cartTotal">$0.00</span>
     </div>
-    <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout →</button>
+    <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout &rarr;</button>
   </div>
 </div>
 
@@ -69,6 +80,7 @@
 <div class="modal-overlay" id="checkoutModal">
   <div class="modal" id="modalContent">
     <h2>Checkout</h2>
+    <div class="form-section-title">Shipping Info</div>
     <div class="form-row">
       <div class="form-group">
         <label>First Name</label>
@@ -97,6 +109,7 @@
         <input type="text" placeholder="10001" id="zip" />
       </div>
     </div>
+    <div class="form-section-title">Payment</div>
     <div class="form-group">
       <label>Card Number</label>
       <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" id="cardNum" oninput="formatCard(this)" />
@@ -123,24 +136,28 @@
 <!-- ABOUT -->
 <section class="about-section">
   <div>
-    <h2>We Live & Breathe T-Shirts</h2>
-    <p>Batra was founded in 2018 by a small team of designers who believed that a great t-shirt could make your whole day better. We source only the softest, most sustainable cotton and print every design in-house.</p>
+    <div class="about-tag">Our Story</div>
+    <h2>We Live &amp; Breathe T-Shirts</h2>
+    <p>Batra was founded by a small team of designers who believed that a great t-shirt could make your whole day better. We source only the softest, most sustainable cotton and print every design in-house.</p>
     <p>From classic plains to limited-edition graphics, every tee is crafted with care and shipped with love.</p>
     <div class="about-stats">
       <div class="stat"><div class="num">50K+</div><div class="label">Happy Customers</div></div>
       <div class="stat"><div class="num">200+</div><div class="label">Designs</div></div>
-      <div class="stat"><div class="num">4.9★</div><div class="label">Avg Rating</div></div>
+      <div class="stat"><div class="num">4.9&#9733;</div><div class="label">Avg Rating</div></div>
     </div>
   </div>
-  <div class="about-emoji-grid">
-    <span>👕</span><span>🎨</span>
-    <span>🌱</span><span>📦</span>
+  <div class="about-visual">
+    <div class="about-card">&#128085;<p>Quality</p></div>
+    <div class="about-card">&#127912;<p>Design</p></div>
+    <div class="about-card">&#127807;<p>Sustainable</p></div>
+    <div class="about-card">&#128230;<p>Fast Ship</p></div>
   </div>
 </section>
 
 <!-- CONTACT -->
 <section class="contact-section">
   <div class="contact-inner">
+    <div class="contact-tag">Contact Us</div>
     <h2>Get in Touch</h2>
     <p>Have a question or custom order request? We'd love to hear from you.</p>
     <div class="contact-form">
@@ -150,16 +167,16 @@
       <button class="contact-submit" onclick="submitContact()">Send Message</button>
     </div>
     <div class="contact-info">
-      <div class="contact-info-item"><div class="icon">📧</div><p>hello@batra.com</p></div>
-      <div class="contact-info-item"><div class="icon">📞</div><p>1-800-THREADCO</p></div>
-      <div class="contact-info-item"><div class="icon">📍</div><p>New York, NY</p></div>
+      <div class="contact-info-item"><div class="icon">&#128231;</div><p>hello@batra.com</p></div>
+      <div class="contact-info-item"><div class="icon">&#128222;</div><p>1-800-BATRA</p></div>
+      <div class="contact-info-item"><div class="icon">&#128205;</div><p>New York, NY</p></div>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  &copy; 2026 Batra. All rights reserved. Made with ❤️ for t-shirt lovers.
+  &copy; 2026 Batra. All rights reserved. Made with &#10084;&#65039; for t-shirt lovers.
 </footer>
 
 <script src="js/data.js"></script>
